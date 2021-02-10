@@ -9,18 +9,18 @@ const fs = require("fs");
 const { startGame } = require("./game");
 //const { startGame } = require("repl");
 
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-//   );
-//   res.setHeader(
-//     "Access-Control-Allow-Methods",
-//     "GET, POST, PATCH, PUT, DELETE, OPTIONS"
-//   );
-//   next();
-// });
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+  );
+  next();
+});
 
 app.use(cors());
 
@@ -33,8 +33,10 @@ app.set("port", PORT);
 
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
-  cors: true,
-  origins: ["*"],
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
 //variables

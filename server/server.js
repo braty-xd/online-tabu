@@ -3,23 +3,26 @@ const express = require("express");
 const http = require("http");
 const PORT = process.env.PORT || 3000;
 const app = express();
+const cors = require("cors");
 const fs = require("fs");
 //const uniqid = require("uniqid");
 const { startGame } = require("./game");
 //const { startGame } = require("repl");
 
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, PUT, DELETE, OPTIONS"
-  );
-  next();
-});
+// app.use((req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "*");
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+//   );
+//   res.setHeader(
+//     "Access-Control-Allow-Methods",
+//     "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+//   );
+//   next();
+// });
+
+app.use(cors());
 
 app.set("port", PORT);
 
@@ -292,4 +295,4 @@ io.on("connection", (socket) => {
 });
 
 //Start server
-io.listen(PORT, () => console.log(`server running on ${PORT}`));
+server.listen(PORT);

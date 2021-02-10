@@ -241,6 +241,7 @@ export default {
     //oyundan cikip lobiye donme
     if (this.backFromGame.isBack) {
       this.backFromGame.isBack = false;
+      console.log("bfg 1");
       this.socket.emit("login-lobby", this.$route.params.id);
     }
     // this.socket.on("name-taken", () => {
@@ -248,10 +249,11 @@ export default {
     // });
     //linkten mi gelmis oda kuranin kendisi mi kontrolu
     else if (this.$route.params.id === this.socket.id) {
-      console.log("ben ciktim");
+      console.log("creator 2 ");
       //return;
     } else {
       this.socket.on("connected", () => {
+        console.log("login 3");
         this.socket.emit("login-lobby", this.$route.params.id);
       });
     }

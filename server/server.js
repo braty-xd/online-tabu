@@ -23,14 +23,15 @@ app.use((req, res, next) => {
 
 app.set("port", PORT);
 
+// cors: {
+//   origin: "*",
+//   methods: ["GET", "POST"],
+// },
+
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
-  pingInterval: 2000,
-  pingTimeout: 5000,
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  cors: true,
+  origins: ["*"],
 });
 
 //variables

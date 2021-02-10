@@ -18,6 +18,7 @@ export default {
   },
   provide: {
     socket: io("https://rocky-escarpment-49396.herokuapp.com/"),
+    //socket: io("localhost:3000"),
     copy: require("clipboard-copy"),
     backFromGame: { isBack: false, backFromLobby: false },
     ///allowLeave: {isAllowed:false}

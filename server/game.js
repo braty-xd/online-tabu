@@ -175,6 +175,10 @@ exports.startGame = function (
   //leave the game
 
   socket.on("delete-player", (currentTeam) => {
+    if (!room) {
+      //socket.emit("bad-url");
+      return;
+    }
     //io.in(lobbyId).emit("play-sound", "logout-game");
     console.log("im deleting from game", socket.id);
     room.memberCount = room.memberCount - 1;

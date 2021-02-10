@@ -1,7 +1,7 @@
 const express = require("express");
 //const path = require("path");
 const http = require("http");
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 const app = express();
 const cors = require("cors");
 const fs = require("fs");
@@ -101,6 +101,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("login-lobby", (lobbyId) => {
+    if (!rooms[`${lobbyId}`]) {
+      //socket.emit("bad-url");
+      return;
+    }
     io.in(lobbyId).emit("play-sound-lobby", "user-joined");
     socket.join(lobbyId);
     rooms[`${lobbyId}`].memberCount++;
@@ -146,7 +150,7 @@ io.on("connection", (socket) => {
       gameRooms[lobbyId].readyMemberCount =
         rooms[`${lobbyId}`].readyMemberCount;
       gameRooms[lobbyId].totalConnected = rooms[`${lobbyId}`].totalConnected;
-      console.log("GAME ROOMS", gameRooms[lobbyId]);
+      //console.log("GAME ROOMS", gameRooms[lobbyId]);
       //io.in(lobbyId).emit("enough-players");
       //io.in(lobbyId).emit("start-game");
       socket.emit("enough-players");
@@ -201,6 +205,10 @@ io.on("connection", (socket) => {
     io.in(lobbyId).emit("lobby", rooms[`${lobbyId}`]);
   });
   socket.on("delete-from-lobby", (currentTeam, lobbyId, isReady) => {
+    if (!rooms[`${lobbyId}`]) {
+      //socket.emit("bad-url");
+      return;
+    }
     console.log("im deleting from loby");
     io.in(lobbyId).emit("play-sound-lobby", "user-logout");
     rooms[lobbyId].memberCount -= 1;

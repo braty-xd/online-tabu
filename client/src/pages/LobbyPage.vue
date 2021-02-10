@@ -238,6 +238,10 @@ export default {
       this.$router.push(`/game/${this.roomId}`);
     });
 
+    // this.socket.on("bad-url", () => {
+    //   this.$router.push("/");
+    // });
+
     //oyundan cikip lobiye donme
     if (this.backFromGame.isBack) {
       this.backFromGame.isBack = false;

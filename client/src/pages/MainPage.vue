@@ -43,10 +43,12 @@ export default {
       //if (this.backFromGame.backFromLobby) {
       //this.backFromGame.backFromLobby = false;
       //location.reload();
-      let soundToPlay = new Audio(require("../assets/create.mp3"));
-      soundToPlay.play();
-      this.socket.emit("create");
-      this.$router.push(`/lobby/${this.socket.id}`);
+      if (this.socket.id) {
+        let soundToPlay = new Audio(require("../assets/create.mp3"));
+        soundToPlay.play();
+        this.socket.emit("create");
+        this.$router.push(`/lobby/${this.socket.id}`);
+      }
       //} else {
       // this.socket.emit("login-lobby", this.$route.params.id);
       // }

@@ -7,16 +7,28 @@
   border-color: coral; border-width: 20px"
     >
       <div class="container">
-        <p style="font-family: 'Secular One', sans-serif;">{{ mission }}</p>
+        <p
+          :class="{
+            'text-danger': role === 'c',
+            'text-success': role === 't',
+            'text-primary': role === 'f',
+          }"
+          style="font-family: 'Secular One', sans-serif; font-size: 24px"
+        >
+          {{ mission }}
+        </p>
       </div>
       <div class="container" style="">
         <div class="row" style="margin-bottom: 50px">
           <div class="col-2">
             <button
               style="width: 60%;"
-              @click="socket.emit('toggle-time')"
+              @click="
+                socket.emit('toggle-time');
+                timeToggleClicked();
+              "
               class="btn btn-secondary"
-              :disabled="role === 'f'"
+              :disabled="role !== 't' || timeToggled"
             >
               <span v-if="room.isTimerOn" class="material-icons">
                 pause
@@ -29,12 +41,7 @@
             <button
               class="btn btn-secondary"
               style="width: 60%; margin-top: 100%"
-              :disabled="
-                role !== 't' ||
-                  room.isTimerOn ||
-                  room.lastCard !== -1 ||
-                  room.isNewTurn
-              "
+              :disabled="role !== 't' || room.lastCard !== -1 || room.isNewTurn"
               @click="
                 socket.emit(
                   'new-card',
@@ -100,8 +107,21 @@
       <div class="container" style="margin-bottom: 100px">
         <div
           class="row"
-          style="text-align: center; margin-left: auto; margin-right: auto; width: 30%"
+          style="text-align: center; margin-left: auto; margin-right: auto; width: 50%"
         >
+          <div v-if="role === 't'" class="col">
+            <button
+              @click="
+                socket.emit('new-card', currentTeam, 't');
+                afterPress();
+              "
+              class="btn btn-danger"
+              style="width:100px; font-family: 'Secular One', sans-serif;"
+              :disabled="!room.isTimerOn || waitAfterPress"
+            >
+              Tabu
+            </button>
+          </div>
           <div v-if="role === 't'" class="col">
             <button
               @click="
@@ -128,19 +148,6 @@
               "
             >
               Pas
-            </button>
-          </div>
-          <div v-if="role === 'c'" class="col">
-            <button
-              @click="
-                socket.emit('new-card', currentTeam, 't');
-                afterPress();
-              "
-              class="btn btn-danger"
-              style="width:100px; font-family: 'Secular One', sans-serif;"
-              :disabled="!room.isTimerOn || waitAfterPress"
-            >
-              Tabu
             </button>
           </div>
         </div>
@@ -233,6 +240,7 @@ export default {
       waitAfterPress: false,
       invitationMessage: "Arkadaşlarını Davet Et!",
       isSoundOn: true,
+      timeToggled: false,
     };
   },
   beforeRouteLeave(_to, _from, next) {
@@ -366,6 +374,12 @@ export default {
       this.waitAfterPress = true;
       setTimeout(() => {
         this.waitAfterPress = false;
+      }, 500);
+    },
+    timeToggleClicked() {
+      this.timeToggled = true;
+      setTimeout(() => {
+        this.timeToggled = false;
       }, 500);
     },
   },

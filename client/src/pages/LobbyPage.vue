@@ -65,6 +65,7 @@
               @click="changeTeam"
               class="btn btn-primary active"
               style="font-family: 'Secular One', sans-serif;"
+              :disabled="afterTeamChangePress"
             >
               Takım değiş
             </button>
@@ -160,6 +161,7 @@ export default {
       notEnoughPlayers: false,
       invitationMessage: "Arkadaşlarını Davet Et!",
       roomId: null,
+      afterTeamChangePress: false,
     };
   },
   computed: {
@@ -212,7 +214,7 @@ export default {
       this.lobby.team1.forEach((player) => {
         if (Object.keys(player)[0] === this.socket.id) {
           this.currentTeam = 1;
-          this.userName = player[this.socket.id];
+          //this.userName = player[this.socket.id];
           isTeam2 = false;
           //break;
         }
@@ -221,7 +223,7 @@ export default {
         this.currentTeam = 2;
         this.lobby.team2.forEach((player) => {
           if (Object.keys(player)[0] === this.socket.id) {
-            this.userName = player[this.socket.id];
+            //this.userName = player[this.socket.id];
             //break;
           }
         });
@@ -236,6 +238,10 @@ export default {
     this.socket.on("start-game", () => {
       this.socket.emit("get-game-listeners", this.roomId);
       this.$router.push(`/game/${this.roomId}`);
+    });
+
+    this.socket.on("ready-reset", () => {
+      this.isReady = false;
     });
 
     // this.socket.on("bad-url", () => {
@@ -313,6 +319,10 @@ export default {
       }
     },
     changeTeam() {
+      this.afterTeamChangePress = true;
+      setTimeout(() => {
+        this.afterTeamChangePress = false;
+      }, 500);
       this.socket.emit(
         "change-team",
         this.currentTeam,

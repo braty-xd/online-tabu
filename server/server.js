@@ -83,6 +83,8 @@ io.on("connection", (socket) => {
       isNewTurn: true,
       isGameOn: false,
       isGameInterrupted: false,
+      roundCount: 0,
+      totalRoundCount: 5,
     };
     roomIntervals[socket.id] = { myInterval: null };
     rooms[`${socket.id}`].memberCount++;
@@ -133,26 +135,34 @@ io.on("connection", (socket) => {
     //console.log("takim", rooms[`${lobbyId}`][`team${currentTeam}`]);
     //console.log("ismim", rooms[`${lobbyId}`][`team${currentTeam}`][socket.id]);
     //rooms[`${lobbyId}`][`team${currentTeam}`][socket.id] = newUserName;
-    rooms[`${lobbyId}`][`team${currentTeam}`].forEach((player) => {
+    let myIndex;
+    rooms[`${lobbyId}`][`team${currentTeam}`].forEach((player, index) => {
       if (Object.keys(player)[0] === socket.id) {
         player[socket.id] = newUserName;
+        myIndex = index;
       }
     });
     io.in(lobbyId).emit("lobby", rooms[`${lobbyId}`]);
     if (gameRooms[lobbyId].isGameOn) {
-      gameRooms[lobbyId].team1 = JSON.parse(
-        JSON.stringify(rooms[`${lobbyId}`].team1)
+      let tmpUser = JSON.parse(
+        JSON.stringify(rooms[`${lobbyId}`][`team${currentTeam}`][myIndex])
       );
-      gameRooms[lobbyId].team2 = JSON.parse(
-        JSON.stringify(rooms[`${lobbyId}`].team2)
-      );
-      gameRooms[lobbyId].memberCount = rooms[`${lobbyId}`].memberCount;
-      gameRooms[lobbyId].readyMemberCount =
-        rooms[`${lobbyId}`].readyMemberCount;
-      gameRooms[lobbyId].totalConnected = rooms[`${lobbyId}`].totalConnected;
-      //console.log("GAME ROOMS", gameRooms[lobbyId]);
-      //io.in(lobbyId).emit("enough-players");
-      //io.in(lobbyId).emit("start-game");
+      gameRooms[lobbyId][`team${currentTeam}`].push(tmpUser);
+
+      // gameRooms[lobbyId].team1 = JSON.parse(
+      //   JSON.stringify(rooms[`${lobbyId}`].team1)
+      // );
+      // gameRooms[lobbyId].team2 = JSON.parse(
+      //   JSON.stringify(rooms[`${lobbyId}`].team2)
+      // );
+      gameRooms[lobbyId].memberCount++;
+      //gameRooms[lobbyId].memberCount = rooms[`${lobbyId}`].memberCount;
+      gameRooms[lobbyId].readyMemberCount++;
+      //gameRooms[lobbyId].readyMemberCount =
+      //rooms[`${lobbyId}`].readyMemberCount;
+      gameRooms[lobbyId].totalConnected++;
+      //gameRooms[lobbyId].totalConnected = rooms[`${lobbyId}`].totalConnected;
+
       socket.emit("enough-players");
       socket.emit("start-game");
       if (gameRooms[lobbyId].isGameInterrupted) {
@@ -229,36 +239,49 @@ io.on("connection", (socket) => {
   });
 
   // DISCONNECT - TO HANDLE LATER - MAYBE
-  // socket.on("disconnect", () => {
-  //   let lobbyId = Object.keys(rooms).find(
-  //     (room) => socket.id in roomsSockets[room]
-  //   );
-  //   if (lobbyId) {
-  //     let currentTeam = 1;
-  //     rooms[lobbyId].team2.forEach((player) => {
-  //       if (Object.keys(player)[0] === socket.id) {
-  //         currentTeam = 2;
-  //       }
-  //     });
-  //     let deletingIndex = rooms[lobbyId][`team${currentTeam}`].findIndex(
-  //       (player) => {
-  //         return Object.keys(player)[0] === socket.id;
-  //         //console.log(player);
-  //       }
-  //     );
-  //     rooms[lobbyId][`team${currentTeam}`].splice(deletingIndex, 1);
-  //     rooms[lobbyId].memberCount--;
-  //     delete roomsSockets[lobbyId][socket.id];
-  //     rooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
-  //     if (socket.id in gameRooms[lobbyId][`team${currentTeam}`]) {
-  //       gameRooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
-  //       gameRooms[lobbyId].memberCount--;
-  //       gameRooms[lobbyId].readyMemberCount--;
-  //       rooms[lobbyId].readyMemberCount--;
-  //       io.in(lobbyId).emit("room-update", gameRooms[lobbyId]);
-  //     }
-  //   }
-  // });
+  socket.on("disconnect", () => {
+    let lobbyId = Object.keys(rooms).find(
+      (room) => socket.id in roomsSockets[room]
+    );
+    if (lobbyId) {
+      let currentTeam = 1;
+      rooms[lobbyId].team2.forEach((player) => {
+        if (Object.keys(player)[0] === socket.id) {
+          currentTeam = 2;
+        }
+      });
+      let deletingIndex = rooms[lobbyId][`team${currentTeam}`].findIndex(
+        (player) => {
+          return Object.keys(player)[0] === socket.id;
+          //console.log(player);
+        }
+      );
+
+      rooms[lobbyId][`team${currentTeam}`].splice(deletingIndex, 1);
+      rooms[lobbyId].memberCount--;
+      delete roomsSockets[lobbyId][socket.id];
+      rooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
+      if (socket.id in gameRooms[lobbyId][`team${currentTeam}`]) {
+        let deletingIndexGame = gameRooms[lobbyId][
+          `team${currentTeam}`
+        ].findIndex((player) => {
+          return Object.keys(player)[0] === socket.id;
+          //console.log(player);
+        });
+        gameRooms[lobbyId][`team${currentTeam}`].splice(deletingIndexGame, 1);
+        gameRooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
+        gameRooms[lobbyId].memberCount--;
+        gameRooms[lobbyId].readyMemberCount--;
+        rooms[lobbyId].readyMemberCount--;
+        io.in(lobbyId).emit("room-update", gameRooms[lobbyId]);
+      } else {
+        rooms[lobbyId].readyMemberCount = 0;
+        io.in(lobbyId).emit("ready-reset");
+      }
+      io.in(lobbyId).emit("lobby", rooms[`${lobbyId}`]);
+    }
+  });
+
   socket.on("try-start-game", (lobbyId) => {
     //rooms[`${lobbyId}`].isGameOn = true;
     //io.in(lobbyId).emit("enough-players");

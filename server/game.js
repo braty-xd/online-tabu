@@ -112,9 +112,9 @@ exports.startGame = function (
       room.lastOperation = 1;
     } else if (action === "t") {
       io.in(lobbyId).emit("play-sound", "taboo");
-      room[`team${otherTeam}Score`]--;
+      room[`team${currentTeam}Score`]--;
       room.lastOperation = -1;
-      [otherTeam, currentTeam] = [currentTeam, otherTeam];
+      //[otherTeam, currentTeam] = [currentTeam, otherTeam];
     } else if (action === "p") {
       io.in(lobbyId).emit("play-sound", "pass");
       room.lastOperation = 0;

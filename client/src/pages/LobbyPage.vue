@@ -55,6 +55,7 @@
               @click="readyToggle"
               class="btn btn-primary"
               :class="{ active: !isReady, disabled: isReady }"
+              :disabled="readyIsPressed"
               style="font-family: 'Secular One', sans-serif;"
             >
               Hazır
@@ -162,6 +163,7 @@ export default {
       invitationMessage: "Arkadaşlarını Davet Et!",
       roomId: null,
       afterTeamChangePress: false,
+      readyIsPressed: false,
     };
   },
   computed: {
@@ -303,7 +305,10 @@ export default {
         this.userNameWarning = "Lütfen kullanıcı adı giriniz";
         return;
       }
-
+      this.readyIsPressed = true;
+      setTimeout(() => {
+        this.readyIsPressed = false;
+      }, 500);
       this.isReady = !this.isReady;
       if (this.isReady) {
         this.userNameWarning = "Oyuna başlamaya hazırsın";

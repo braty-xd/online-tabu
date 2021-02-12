@@ -174,42 +174,42 @@ exports.startGame = function (
 
   //leave the game
 
-  socket.on("delete-player", (currentTeam) => {
-    if (!room) {
-      //socket.emit("bad-url");
-      return;
-    }
-    //io.in(lobbyId).emit("play-sound", "logout-game");
-    console.log("im deleting from game", socket.id);
-    room.memberCount = room.memberCount - 1;
-    room.readyMemberCount -= 1;
-    //lobby.memberCount -= 1;
-    //lobby.readyMemberCount -= 1;
-    let deletingIndex = room[`team${currentTeam}`].findIndex((player) => {
-      return Object.keys(player)[0] === socket.id;
-      //console.log(player);
-    });
-    room[`team${currentTeam}`].splice(deletingIndex, 1);
-    //lobby[`team${currentTeam}`].splice(deletingIndex, 1);
-    delete roomSockets[socket.id];
-    room.roomLeader = Object.keys(roomSockets)[0];
-    //lobby.roomLeader = Object.keys(roomSockets)[0];
-    io.in(lobbyId).emit("room-update", room);
-    //io.in(lobbyId).emit("lobby", lobby);
-    if (
-      currentTeam === room.teamTurn &&
-      room[`overAllTurn${currentTeam}`] === deletingIndex
-    ) {
-      io.in(lobbyId).emit("turn-ended");
-    }
+  // socket.on("delete-player", (currentTeam) => {
+  //   if (!room) {
+  //     //socket.emit("bad-url");
+  //     return;
+  //   }
+  //   //io.in(lobbyId).emit("play-sound", "logout-game");
+  //   console.log("im deleting from game", socket.id);
+  //   room.memberCount = room.memberCount - 1;
+  //   room.readyMemberCount -= 1;
+  //   //lobby.memberCount -= 1;
+  //   //lobby.readyMemberCount -= 1;
+  //   let deletingIndex = room[`team${currentTeam}`].findIndex((player) => {
+  //     return Object.keys(player)[0] === socket.id;
+  //     //console.log(player);
+  //   });
+  //   room[`team${currentTeam}`].splice(deletingIndex, 1);
+  //   //lobby[`team${currentTeam}`].splice(deletingIndex, 1);
+  //   delete roomSockets[socket.id];
+  //   room.roomLeader = Object.keys(roomSockets)[0];
+  //   //lobby.roomLeader = Object.keys(roomSockets)[0];
+  //   io.in(lobbyId).emit("room-update", room);
+  //   //io.in(lobbyId).emit("lobby", lobby);
+  //   if (
+  //     currentTeam === room.teamTurn &&
+  //     room[`overAllTurn${currentTeam}`] === deletingIndex
+  //   ) {
+  //     io.in(lobbyId).emit("turn-ended");
+  //   }
 
-    if (room.team1.length < 2 || room.team2.length < 2) {
-      //TODO: stop the game
-      room.isGameInterrupted = true;
-      room.isTimerOn = false;
-      clearInterval(gameInterval.myInterval);
-      io.in(lobbyId).emit("room-update", room);
-    }
-  });
+  //   if (room.team1.length < 2 || room.team2.length < 2) {
+  //     //TODO: stop the game
+  //     room.isGameInterrupted = true;
+  //     room.isTimerOn = false;
+  //     clearInterval(gameInterval.myInterval);
+  //     io.in(lobbyId).emit("room-update", room);
+  //   }
+  // });
   //console.log(socket.id, socket.eventNames());
 };

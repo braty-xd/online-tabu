@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 const cors = require("cors");
 const fs = require("fs");
+const evnts = require("events");
 //const uniqid = require("uniqid");
 const { startGame } = require("./game");
 //const { startGame } = require("repl");
@@ -102,6 +103,17 @@ io.on("connection", (socket) => {
     io.in(socket.id).emit("lobby", rooms[`${socket.id}`]);
   });
 
+  // socket.on("remove-all-listeners", () => {
+  //   //console.log("eventler", socket.eventNames());
+  //   //console.log("eventler", socket.listenersAny());
+  //   //console.log("hmm", getEventListeners(socket, "delete-player"));
+  //   console.log("asda");
+  //   //evnts.getEventListeners(socket, "delete-player");
+  //   socket.removeAllListeners(["game-entered"]);
+  //   socket.removeAllListeners(["toggle-time"]);
+  //   socket.removeAllListeners(["new-card"]);
+  //   socket.removeAllListeners(["delete-player"]);
+  // });
   socket.on("login-lobby", (lobbyId) => {
     if (!rooms[`${lobbyId}`]) {
       //socket.emit("bad-url");
@@ -173,6 +185,8 @@ io.on("connection", (socket) => {
           gameRooms[lobbyId].isGameInterrupted = false;
         }
       }
+      console.log("lobi", rooms[lobbyId]);
+      console.log("oyun", gameRooms[lobbyId]);
       return;
     }
     if (
@@ -196,6 +210,8 @@ io.on("connection", (socket) => {
     } else {
       io.in(lobbyId).emit("enough-players");
     }
+    //console.log("lobi", rooms[lobbyId]);
+    //console.log("oyun", gameRooms[lobbyId]);
   });
   socket.on("get-game-listeners", (lobbyId) => {
     startGame(
@@ -214,29 +230,31 @@ io.on("connection", (socket) => {
     rooms[`${lobbyId}`].totalPassCount = passCount;
     io.in(lobbyId).emit("lobby", rooms[`${lobbyId}`]);
   });
-  // socket.on("delete-from-lobby", (currentTeam, lobbyId, isReady) => {
-  //   if (!rooms[`${lobbyId}`]) {
-  //     //socket.emit("bad-url");
-  //     return;
-  //   }
-  //   console.log("im deleting from loby");
-  //   io.in(lobbyId).emit("play-sound-lobby", "user-logout");
-  //   rooms[lobbyId].memberCount -= 1;
-  //   if (isReady) {
-  //     rooms[lobbyId].readyMemberCount -= 1;
-  //   }
+  socket.on("delete-from-lobby", (currentTeam, lobbyId, isReady) => {
+    //socket.removeAllListeners();
+    if (!rooms[`${lobbyId}`]) {
+      //socket.emit("bad-url");
+      return;
+    }
+    console.log("im deleting from loby");
+    io.in(lobbyId).emit("play-sound-lobby", "user-logout");
+    rooms[lobbyId].memberCount -= 1;
+    if (isReady) {
+      rooms[lobbyId].readyMemberCount -= 1;
+    }
 
-  //   let deletingIndex = rooms[lobbyId][`team${currentTeam}`].findIndex(
-  //     (player) => {
-  //       return Object.keys(player)[0] === socket.id;
-  //       //console.log(player);
-  //     }
-  //   );
-  //   rooms[lobbyId][`team${currentTeam}`].splice(deletingIndex, 1);
-  //   delete roomsSockets[lobbyId][socket.id];
-  //   rooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
-  //   io.in(lobbyId).emit("lobby", rooms[lobbyId]);
-  // });
+    let deletingIndex = rooms[lobbyId][`team${currentTeam}`].findIndex(
+      (player) => {
+        return Object.keys(player)[0] === socket.id;
+        //console.log(player);
+      }
+    );
+    rooms[lobbyId][`team${currentTeam}`].splice(deletingIndex, 1);
+    delete roomsSockets[lobbyId][socket.id];
+    rooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
+    io.in(lobbyId).emit("lobby", rooms[lobbyId]);
+    //console.log("lobi", rooms[lobbyId]);
+  });
 
   // DISCONNECT - TO HANDLE LATER - MAYBE
   socket.on("disconnect", () => {
@@ -289,6 +307,13 @@ io.on("connection", (socket) => {
           gameRooms[lobbyId].readyMemberCount--;
           rooms[lobbyId].readyMemberCount--;
           io.in(lobbyId).emit("room-update", gameRooms[lobbyId]);
+
+          if (
+            currentTeam === rooms[lobbyId].teamTurn &&
+            rooms[lobbyId][`overAllTurn${currentTeam}`] === deletingIndexGame
+          ) {
+            io.in(lobbyId).emit("turn-ended");
+          }
           //handle if not enough players
           if (
             gameRooms[lobbyId].team1.length < 2 ||
@@ -305,19 +330,21 @@ io.on("connection", (socket) => {
         io.in(lobbyId).emit("ready-reset");
       }
       io.in(lobbyId).emit("lobby", rooms[`${lobbyId}`]);
+    } else {
+      console.log("NO LOBBY FOUND DISCONNECT");
     }
   });
 
-  socket.on("try-start-game", (lobbyId) => {
-    //rooms[`${lobbyId}`].isGameOn = true;
-    //io.in(lobbyId).emit("enough-players");
-    //io.in(lobbyId).emit("start-game");
-    //game logic
-    gameRooms[lobbyId] = JSON.parse(JSON.stringify(rooms[`${lobbyId}`]));
-    //console.log("OYUN BASLADI GAME ROOM", gameRooms[lobbyId]);
-    io.in(lobbyId).emit("enough-players");
-    io.in(lobbyId).emit("start-game");
-  });
+  // socket.on("try-start-game", (lobbyId) => {
+  //   //rooms[`${lobbyId}`].isGameOn = true;
+  //   //io.in(lobbyId).emit("enough-players");
+  //   //io.in(lobbyId).emit("start-game");
+  //   //game logic
+  //   gameRooms[lobbyId] = JSON.parse(JSON.stringify(rooms[`${lobbyId}`]));
+  //   //console.log("OYUN BASLADI GAME ROOM", gameRooms[lobbyId]);
+  //   io.in(lobbyId).emit("enough-players");
+  //   io.in(lobbyId).emit("start-game");
+  // });
   socket.on("user-not-ready", (lobbyId) => {
     io.in(lobbyId).emit("play-sound-lobby", "ready-off");
     rooms[`${lobbyId}`].readyMemberCount--;

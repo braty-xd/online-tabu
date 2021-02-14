@@ -198,16 +198,17 @@ export default {
     }
     // next(false);
   },
-  beforeMount() {
+  created() {
+    //this.socket.removeAllListeners();
     this.roomId = this.$route.params.id;
-    window.addEventListener("beforeunload", () => {
-      this.socket.emit(
-        "delete-from-lobby",
-        this.currentTeam,
-        this.roomId,
-        this.isReady
-      );
-    });
+    // window.addEventListener("beforeunload", () => {
+    //   this.socket.emit(
+    //     "delete-from-lobby",
+    //     this.currentTeam,
+    //     this.roomId,
+    //     this.isReady
+    //   );
+    // });
     this.socket.on("lobby", (lobby) => {
       this.lobby = lobby;
       this.isLoading = false;
@@ -238,7 +239,11 @@ export default {
       this.notEnoughPlayers = true;
     });
     this.socket.on("start-game", () => {
-      this.socket.emit("get-game-listeners", this.roomId);
+      if (!this.backFromGame.isBack) {
+        console.log("listenerlari aldim");
+        this.socket.emit("get-game-listeners", this.roomId);
+      }
+      //this.socket.emit("get-game-listeners", this.roomId);
       this.$router.push(`/game/${this.roomId}`);
     });
 
@@ -252,7 +257,7 @@ export default {
 
     //oyundan cikip lobiye donme
     if (this.backFromGame.isBack) {
-      this.backFromGame.isBack = false;
+      //this.backFromGame.isBack = false;
       console.log("bfg 1");
       this.socket.emit("login-lobby", this.$route.params.id);
     }
@@ -296,9 +301,9 @@ export default {
       this.socket.emit("print-rooms");
       this.socket.close();
     },
-    tryStartGame() {
-      this.socket.emit("try-start-game", this.roomId);
-    },
+    // tryStartGame() {
+    //   this.socket.emit("try-start-game", this.roomId);
+    // },
     readyToggle() {
       //this.userName = this.$refs.username.value;
       if (this.userName.trim() === "") {

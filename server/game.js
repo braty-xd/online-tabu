@@ -78,7 +78,7 @@ exports.startGame = function (
     //console.log("TOOGLE TIME", room);
 
     room.isTimerOn = !room.isTimerOn;
-    console.log("TOGGLE TIME", room.isTimerOn);
+    //console.log("TOGGLE TIME", room.isTimerOn);
 
     //console.log("intervalden once");
     //let myInterval;
@@ -94,7 +94,7 @@ exports.startGame = function (
       //gameInterval = null;
       //console.log("game interval after closed", gameInterval);
     }
-    console.log(socket.id, gameInterval.myInterval);
+    //console.log(socket.id, gameInterval.myInterval);
     io.in(lobbyId).emit("room-update", room);
   });
 
@@ -174,42 +174,51 @@ exports.startGame = function (
 
   //leave the game
 
-  // socket.on("delete-player", (currentTeam) => {
-  //   if (!room) {
-  //     //socket.emit("bad-url");
-  //     return;
-  //   }
-  //   //io.in(lobbyId).emit("play-sound", "logout-game");
-  //   console.log("im deleting from game", socket.id);
-  //   room.memberCount = room.memberCount - 1;
-  //   room.readyMemberCount -= 1;
-  //   //lobby.memberCount -= 1;
-  //   //lobby.readyMemberCount -= 1;
-  //   let deletingIndex = room[`team${currentTeam}`].findIndex((player) => {
-  //     return Object.keys(player)[0] === socket.id;
-  //     //console.log(player);
-  //   });
-  //   room[`team${currentTeam}`].splice(deletingIndex, 1);
-  //   //lobby[`team${currentTeam}`].splice(deletingIndex, 1);
-  //   delete roomSockets[socket.id];
-  //   room.roomLeader = Object.keys(roomSockets)[0];
-  //   //lobby.roomLeader = Object.keys(roomSockets)[0];
-  //   io.in(lobbyId).emit("room-update", room);
-  //   //io.in(lobbyId).emit("lobby", lobby);
-  //   if (
-  //     currentTeam === room.teamTurn &&
-  //     room[`overAllTurn${currentTeam}`] === deletingIndex
-  //   ) {
-  //     io.in(lobbyId).emit("turn-ended");
-  //   }
+  function deletePlayer(currentTeam) {
+    //socket.removeAllListeners();
+    if (!room) {
+      //socket.emit("bad-url");
+      return;
+    }
+    //io.in(lobbyId).emit("play-sound", "logout-game");
+    console.log("im deleting from game", socket.id);
+    room.memberCount = room.memberCount - 1;
+    room.readyMemberCount -= 1;
+    //lobby.memberCount -= 1;
+    //lobby.readyMemberCount -= 1;
+    let deletingIndex = room[`team${currentTeam}`].findIndex((player) => {
+      return Object.keys(player)[0] === socket.id;
+      //console.log(player);
+    });
+    console.log(deletingIndex);
+    if (deletingIndex === -1) {
+      return;
+    }
+    console.log("before room", room.team1, room.team2);
+    room[`team${currentTeam}`].splice(deletingIndex, 1);
+    //lobby[`team${currentTeam}`].splice(deletingIndex, 1);
+    //delete roomSockets[socket.id];
+    room.roomLeader = Object.keys(roomSockets)[0];
+    //lobby.roomLeader = Object.keys(roomSockets)[0];
+    io.in(lobbyId).emit("room-update", room);
+    //io.in(lobbyId).emit("lobby", lobby);
+    if (
+      currentTeam === room.teamTurn &&
+      room[`overAllTurn${currentTeam}`] === deletingIndex
+    ) {
+      io.in(lobbyId).emit("turn-ended");
+    }
 
-  //   if (room.team1.length < 2 || room.team2.length < 2) {
-  //     //TODO: stop the game
-  //     room.isGameInterrupted = true;
-  //     room.isTimerOn = false;
-  //     clearInterval(gameInterval.myInterval);
-  //     io.in(lobbyId).emit("room-update", room);
-  //   }
-  // });
+    if (room.team1.length < 2 || room.team2.length < 2) {
+      //TODO: stop the game
+      room.isGameInterrupted = true;
+      room.isTimerOn = false;
+      clearInterval(gameInterval.myInterval);
+      io.in(lobbyId).emit("room-update", room);
+    }
+    console.log("after room", room.team1, room.team2);
+  }
+
+  socket.on("delete-player", deletePlayer);
   //console.log(socket.id, socket.eventNames());
 };

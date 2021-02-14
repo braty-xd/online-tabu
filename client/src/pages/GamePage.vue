@@ -221,6 +221,7 @@
 </template>
 
 <script>
+//import GameEnd from "../components/GameEnd.vue";
 import GameWarning from "../components/GameWarning.vue";
 import TabooCard from "../components/TabooCard";
 import TeamMembers from "../components/TeamMembers.vue";
@@ -241,23 +242,42 @@ export default {
       invitationMessage: "Arkadaşlarını Davet Et!",
       isSoundOn: true,
       timeToggled: false,
+      roomId: null,
+      goLobbyCount: 0,
     };
   },
   beforeRouteLeave(_to, _from, next) {
     let dene = confirm("oyundan ayrilmak uzeresin");
     if (dene) {
       this.backFromGame.isBack = true;
-      this.socket.emit("delete-player", this.currentTeam);
+      if (this.goLobbyCount === 0) {
+        console.log("before route leave calling delete player");
+        this.socket.emit("delete-player", this.currentTeam);
+        this.socket.emit(
+          "delete-from-lobby",
+          this.currentTeam,
+          this.roomId,
+          true
+        );
+      }
+      this.goLobbyCount++;
+      //this.socket.removeAllListeners();
+      //this.socket.removeAllListeners(["delete-player"]);
+      //this.socket.emit("remove-all-listeners");
       next(dene);
     } else {
       next(false);
     }
     //next(false);
   },
-  beforeMount() {
-    window.addEventListener("beforeunload", () => {
-      this.socket.emit("delete-player", this.currentTeam);
-    });
+  created() {
+    this.goLobbyCount = 0;
+    this.roomId = this.$route.params.id;
+    //console.log("before unload calling delete player")
+    // window.addEventListener("beforeunload", () => {
+    //   console.log("before unload calling delete player");
+    //   this.socket.emit("delete-player", this.currentTeam);
+    // });
     this.socket.emit("game-entered");
     this.socket.on("room-update", (room) => {
       this.room = room;
@@ -351,9 +371,9 @@ export default {
     });
   },
   computed: {
-    roomId() {
-      return this.$route.params.id;
-    },
+    // roomId() {
+    //   return this.$route.params.id;
+    // },
     printTeller() {
       return Object.values(
         this.room[`team${this.room.teamTurn}`][

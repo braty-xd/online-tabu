@@ -194,7 +194,7 @@ exports.startGame = function (
     if (deletingIndex === -1) {
       return;
     }
-    console.log("before room", room.team1, room.team2);
+    //console.log("before room", room.team1, room.team2);
     room[`team${currentTeam}`].splice(deletingIndex, 1);
     //lobby[`team${currentTeam}`].splice(deletingIndex, 1);
     //delete roomSockets[socket.id];
@@ -206,6 +206,11 @@ exports.startGame = function (
       currentTeam === room.teamTurn &&
       room[`overAllTurn${currentTeam}`] === deletingIndex
     ) {
+      room[`overAllTurn${currentTeam}`] =
+        room[`overAllTurn${currentTeam}`] % room[`team${currentTeam}`].length;
+      console.log("new turn", room[`overAllTurn${currentTeam}`]);
+
+      io.in(lobbyId).emit("room-update", room);
       io.in(lobbyId).emit("turn-ended");
     }
 
@@ -216,7 +221,7 @@ exports.startGame = function (
       clearInterval(gameInterval.myInterval);
       io.in(lobbyId).emit("room-update", room);
     }
-    console.log("after room", room.team1, room.team2);
+    //console.log("after room", room.team1, room.team2);
   }
 
   socket.on("delete-player", deletePlayer);

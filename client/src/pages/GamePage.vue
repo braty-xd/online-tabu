@@ -1,223 +1,227 @@
 <template>
-  <div v-if="!isLoading">
-    <game-warning v-if="room.isGameInterrupted"></game-warning>
-    <div
-      class="container"
-      style="background-color:#FFFFFF; border-style: solid;
+  <keep-alive>
+    <div v-if="!isLoading">
+      <game-warning v-if="room.isGameInterrupted"></game-warning>
+      <div
+        class="container"
+        style="background-color:#FFFFFF; border-style: solid;
   border-color: coral; border-width: 20px"
-    >
-      <div class="container">
-        <p
-          :class="{
-            'text-danger': role === 'c',
-            'text-success': role === 't',
-            'text-primary': role === 'f',
-          }"
-          style="font-family: 'Secular One', sans-serif; font-size: 24px"
-        >
-          {{ mission }}
-        </p>
-      </div>
-      <div class="container" style="">
-        <div class="row" style="margin-bottom: 50px">
-          <div class="col-2">
-            <button
-              style="width: 60%;"
-              @click="
-                socket.emit('toggle-time');
-                timeToggleClicked();
-              "
-              class="btn btn-secondary"
-              :disabled="role !== 't' || timeToggled"
-            >
-              <span v-if="room.isTimerOn" class="material-icons">
-                pause
-              </span>
-              <span v-if="!room.isTimerOn" class="material-icons">
-                play_arrow
-              </span>
-            </button>
-
-            <button
-              class="btn btn-secondary"
-              style="width: 60%; margin-top: 100%"
-              :disabled="role !== 't' || room.lastCard !== -1 || room.isNewTurn"
-              @click="
-                socket.emit(
-                  'new-card',
-                  currentTeam,
-                  'b',
-                  room.usedCards[room.usedCards.length - 2]
-                )
-              "
-            >
-              <span class="material-icons">
-                settings_backup_restore
-              </span>
-            </button>
-          </div>
-          <div class="col">
-            <taboo-card
-              v-if="!isLoading && (role === 'c' || role === 't')"
-              :tabooWord="tabooWord"
-              :tabooRules="tabooRules"
-              :role="role"
-            ></taboo-card>
-            <img
-              v-if="!isLoading && role === 'f'"
-              src="../assets/question.png"
-              alt=""
-            />
-          </div>
-          <div class="col-2">
-            <div class="card">
-              <div
-                class="card-body"
-                style="font-weight: normal; font-size: 36px; font-family: 'Secular One', sans-serif;"
+      >
+        <div class="container">
+          <p
+            :class="{
+              'text-danger': role === 'c',
+              'text-success': role === 't',
+              'text-primary': role === 'f',
+            }"
+            style="font-family: 'Secular One', sans-serif; font-size: 24px"
+          >
+            {{ mission }}
+          </p>
+        </div>
+        <div class="container" style="">
+          <div class="row" style="margin-bottom: 50px">
+            <div class="col-2">
+              <button
+                style="width: 60%;"
+                @click="
+                  socket.emit('toggle-time');
+                  timeToggleClicked();
+                "
+                class="btn btn-secondary"
+                :disabled="role !== 't' || timeToggled"
               >
-                {{ room.timer }}
+                <span v-if="room.isTimerOn" class="material-icons">
+                  pause
+                </span>
+                <span v-if="!room.isTimerOn" class="material-icons">
+                  play_arrow
+                </span>
+              </button>
+
+              <button
+                class="btn btn-secondary"
+                style="width: 60%; margin-top: 100%"
+                :disabled="
+                  role !== 't' || room.lastCard !== -1 || room.isNewTurn
+                "
+                @click="
+                  socket.emit(
+                    'new-card',
+                    currentTeam,
+                    'b',
+                    room.usedCards[room.usedCards.length - 2]
+                  )
+                "
+              >
+                <span class="material-icons">
+                  settings_backup_restore
+                </span>
+              </button>
+            </div>
+            <div class="col">
+              <taboo-card
+                v-if="!isLoading && (role === 'c' || role === 't')"
+                :tabooWord="tabooWord"
+                :tabooRules="tabooRules"
+                :role="role"
+              ></taboo-card>
+              <img
+                v-if="!isLoading && role === 'f'"
+                src="../assets/question.png"
+                alt=""
+              />
+            </div>
+            <div class="col-2">
+              <div class="card">
+                <div
+                  class="card-body"
+                  style="font-weight: normal; font-size: 36px; font-family: 'Secular One', sans-serif;"
+                >
+                  {{ room.timer }}
+                </div>
+              </div>
+              <button
+                style="width: 60%; margin-top: 50%"
+                @click="isSoundOn = !isSoundOn"
+                class="btn btn-secondary"
+                :class="{ disabled: !isSoundOn }"
+              >
+                <span v-if="isSoundOn" class="material-icons">
+                  volume_up
+                </span>
+                <span v-if="!isSoundOn" class="material-icons">
+                  volume_off
+                </span>
+              </button>
+              <div style="margin-top: 50%">
+                <button
+                  class="btn btn-info"
+                  style="width: 100%; font-family: 'Secular One', sans-serif;"
+                  @click="copyInvitation"
+                >
+                  {{ invitationMessage }}
+                </button>
               </div>
             </div>
-            <button
-              style="width: 60%; margin-top: 50%"
-              @click="isSoundOn = !isSoundOn"
-              class="btn btn-secondary"
-              :class="{ disabled: !isSoundOn }"
-            >
-              <span v-if="isSoundOn" class="material-icons">
-                volume_up
-              </span>
-              <span v-if="!isSoundOn" class="material-icons">
-                volume_off
-              </span>
-            </button>
-            <div style="margin-top: 50%">
+          </div>
+        </div>
+        <!-- <button @click="socket.emit('toggle-time')">Toggle time</button> -->
+        <div class="container" style="margin-bottom: 100px">
+          <div
+            class="row"
+            style="text-align: center; margin-left: auto; margin-right: auto; width: 50%"
+          >
+            <div v-if="role === 't'" class="col">
               <button
-                class="btn btn-info"
-                style="width: 100%; font-family: 'Secular One', sans-serif;"
-                @click="copyInvitation"
+                @click="
+                  socket.emit('new-card', currentTeam, 't');
+                  afterPress();
+                "
+                class="btn btn-danger"
+                style="width:100px; font-family: 'Secular One', sans-serif;"
+                :disabled="!room.isTimerOn || waitAfterPress"
               >
-                {{ invitationMessage }}
+                Tabu
+              </button>
+            </div>
+            <div v-if="role === 't'" class="col">
+              <button
+                @click="
+                  socket.emit('new-card', currentTeam, 'c');
+                  afterPress();
+                "
+                class="btn btn-success"
+                style="width:100px; font-family: 'Secular One', sans-serif;"
+                :disabled="!room.isTimerOn || waitAfterPress"
+              >
+                Doğru
+              </button>
+            </div>
+            <div v-if="role === 't'" class="col">
+              <button
+                @click="
+                  socket.emit('new-card', currentTeam, 'p');
+                  afterPress();
+                "
+                class="btn btn-primary"
+                style="width:100px; font-family: 'Secular One', sans-serif;"
+                :disabled="
+                  room.passCount === 0 || !room.isTimerOn || waitAfterPress
+                "
+              >
+                Pas
               </button>
             </div>
           </div>
-        </div>
-      </div>
-      <!-- <button @click="socket.emit('toggle-time')">Toggle time</button> -->
-      <div class="container" style="margin-bottom: 100px">
-        <div
-          class="row"
-          style="text-align: center; margin-left: auto; margin-right: auto; width: 50%"
-        >
-          <div v-if="role === 't'" class="col">
-            <button
-              @click="
-                socket.emit('new-card', currentTeam, 't');
-                afterPress();
-              "
-              class="btn btn-danger"
-              style="width:100px; font-family: 'Secular One', sans-serif;"
-              :disabled="!room.isTimerOn || waitAfterPress"
-            >
-              Tabu
-            </button>
-          </div>
-          <div v-if="role === 't'" class="col">
-            <button
-              @click="
-                socket.emit('new-card', currentTeam, 'c');
-                afterPress();
-              "
-              class="btn btn-success"
-              style="width:100px; font-family: 'Secular One', sans-serif;"
-              :disabled="!room.isTimerOn || waitAfterPress"
-            >
-              Doğru
-            </button>
-          </div>
-          <div v-if="role === 't'" class="col">
-            <button
-              @click="
-                socket.emit('new-card', currentTeam, 'p');
-                afterPress();
-              "
-              class="btn btn-primary"
-              style="width:100px; font-family: 'Secular One', sans-serif;"
-              :disabled="
-                room.passCount === 0 || !room.isTimerOn || waitAfterPress
-              "
-            >
-              Pas
-            </button>
-          </div>
-        </div>
-        <div
-          class="row"
-          style="text-align: center; margin-left: auto; margin-right: auto; width: 30%; padding-top: 50px"
-        >
           <div
-            class="col"
-            style="font-family: 'Secular One', sans-serif; font-size: 24px"
+            class="row"
+            style="text-align: center; margin-left: auto; margin-right: auto; width: 30%; padding-top: 50px"
           >
-            Takım {{ room.teamTurn }}: {{ printTeller }} anlatıyor
+            <div
+              class="col"
+              style="font-family: 'Secular One', sans-serif; font-size: 24px"
+            >
+              Takım {{ room.teamTurn }}: {{ printTeller }} anlatıyor
+            </div>
+          </div>
+          <div class="row" style="font-family: 'Secular One', sans-serif;">
+            <div class="col">Kalan Pas Hakkı: {{ room.passCount }}</div>
           </div>
         </div>
-        <div class="row" style="font-family: 'Secular One', sans-serif;">
-          <div class="col">Kalan Pas Hakkı: {{ room.passCount }}</div>
-        </div>
-      </div>
-      <div class="container" style="">
-        <div class="row">
-          <div class="col">
-            <team-members
-              :members="room.team1"
-              :teamNumber="1"
-              :isMyTeamsTurn="room.teamTurn === 1"
-              :tellerTurn="room[`overAllTurn${room.teamTurn}`]"
-              :roomLeader="room.roomLeader"
-            ></team-members>
-          </div>
-          <div class="col" style="font-family: 'Secular One', sans-serif;">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">Takım 1</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="font-size: 36px">{{ room.team1Score }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="col" style="font-family: 'Secular One', sans-serif;">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">Takım 2</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="font-size: 36px">{{ room.team2Score }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="col">
-            <team-members
-              :members="room.team2"
-              :teamNumber="2"
-              :isMyTeamsTurn="room.teamTurn === 2"
-              :tellerTurn="room[`overAllTurn${room.teamTurn}`]"
-              :roomLeader="room.roomLeader"
-            ></team-members>
+        <div class="container" style="">
+          <div class="row">
+            <div class="col">
+              <team-members
+                :members="room.team1"
+                :teamNumber="1"
+                :isMyTeamsTurn="room.teamTurn === 1"
+                :tellerTurn="room[`overAllTurn${room.teamTurn}`]"
+                :roomLeader="room.roomLeader"
+              ></team-members>
+            </div>
+            <div class="col" style="font-family: 'Secular One', sans-serif;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Takım 1</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-size: 36px">{{ room.team1Score }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col" style="font-family: 'Secular One', sans-serif;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Takım 2</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-size: 36px">{{ room.team2Score }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col">
+              <team-members
+                :members="room.team2"
+                :teamNumber="2"
+                :isMyTeamsTurn="room.teamTurn === 2"
+                :tellerTurn="room[`overAllTurn${room.teamTurn}`]"
+                :roomLeader="room.roomLeader"
+              ></team-members>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </keep-alive>
 </template>
 
 <script>
@@ -250,16 +254,31 @@ export default {
     let dene = confirm("oyundan ayrilmak uzeresin");
     if (dene) {
       this.backFromGame.isBack = true;
-      if (this.goLobbyCount === 0) {
-        console.log("before route leave calling delete player");
-        this.socket.emit("delete-player", this.currentTeam);
-        this.socket.emit(
-          "delete-from-lobby",
-          this.currentTeam,
-          this.roomId,
-          true
-        );
-      }
+      this.socket.removeAllListeners("play-sound");
+      this.socket.removeAllListeners("room-update");
+      this.socket.removeAllListeners("time-update");
+      this.socket.removeAllListeners("room-start");
+      this.socket.removeAllListeners("turn-ended");
+      this.socket.removeAllListeners("role-teller");
+      this.socket.removeAllListeners("role-finder");
+      this.socket.removeAllListeners("role-controller");
+      this.socket.removeAllListeners("lobby");
+      this.socket.removeAllListeners("enough-players");
+      this.socket.removeAllListeners("not-enough-players");
+      this.socket.removeAllListeners("start-game");
+      this.socket.removeAllListeners("ready-reset");
+      this.socket.removeAllListeners("play-sound-lobby");
+      window.removeEventListener("beforeunload", this.deleteFromGame);
+      console.log("before route leave calling delete player");
+      this.socket.emit("called-leave");
+      this.socket.emit("delete-player", this.currentTeam);
+      this.socket.emit(
+        "delete-from-lobby",
+        this.currentTeam,
+        this.roomId,
+        true
+      );
+
       this.goLobbyCount++;
       //this.socket.removeAllListeners();
       //this.socket.removeAllListeners(["delete-player"]);
@@ -270,14 +289,14 @@ export default {
     }
     //next(false);
   },
-  created() {
+  // beforeUnmount() {
+  //   window.removeEventListener("beforeunload", this.deleteFromGame);
+  // },
+  mounted() {
     this.goLobbyCount = 0;
     this.roomId = this.$route.params.id;
-    //console.log("before unload calling delete player")
-    // window.addEventListener("beforeunload", () => {
-    //   console.log("before unload calling delete player");
-    //   this.socket.emit("delete-player", this.currentTeam);
-    // });
+    console.log("before unload calling delete player");
+    window.addEventListener("beforeunload", this.deleteFromGame);
     this.socket.emit("game-entered");
     this.socket.on("room-update", (room) => {
       this.room = room;
@@ -318,6 +337,7 @@ export default {
           }
         );
         if (myIndex === this.room[`overAllTurn${this.currentTeam}`]) {
+          console.log("my turnn");
           this.socket.emit("new-card", this.currentTeam, "n");
         }
       }
@@ -366,6 +386,7 @@ export default {
             soundToPlay = new Audio(require("../assets/user-logout.mp3"));
             break;
         }
+        console.log("ses tekrariii");
         soundToPlay.play();
       }
     });
@@ -383,6 +404,10 @@ export default {
     },
   },
   methods: {
+    deleteFromGame() {
+      console.log("before unload calling delete player");
+      this.socket.emit("delete-player", this.currentTeam);
+    },
     copyInvitation() {
       this.copy(String(window.location.href).replace("game", "lobby"));
       this.invitationMessage = "Link panoya kopyalandı";

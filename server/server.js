@@ -117,6 +117,7 @@ io.on("connection", (socket) => {
   socket.on("login-lobby", (lobbyId) => {
     if (!rooms[`${lobbyId}`]) {
       //socket.emit("bad-url");
+      console.log("login lobby failed");
       return;
     }
     io.in(lobbyId).emit("play-sound-lobby", "user-joined");
@@ -185,8 +186,8 @@ io.on("connection", (socket) => {
           gameRooms[lobbyId].isGameInterrupted = false;
         }
       }
-      console.log("lobi", rooms[lobbyId]);
-      console.log("oyun", gameRooms[lobbyId]);
+      // console.log("lobi", rooms[lobbyId]);
+      // console.log("oyun", gameRooms[lobbyId]);
       return;
     }
     if (
@@ -201,7 +202,6 @@ io.on("connection", (socket) => {
         //TODO: Oyunu baslat
         //rooms[`${lobbyId}`].isGameOn = true;
         gameRooms[lobbyId] = JSON.parse(JSON.stringify(rooms[`${lobbyId}`]));
-        //console.log("OYUN BASLADI GAME ROOM", gameRooms[lobbyId]);
         io.in(lobbyId).emit("enough-players");
         io.in(lobbyId).emit("start-game");
         //startGame(io, socket, rooms[`${lobbyId}`], lobbyId);
@@ -210,8 +210,6 @@ io.on("connection", (socket) => {
     } else {
       io.in(lobbyId).emit("enough-players");
     }
-    //console.log("lobi", rooms[lobbyId]);
-    //console.log("oyun", gameRooms[lobbyId]);
   });
   socket.on("get-game-listeners", (lobbyId) => {
     startGame(
@@ -230,6 +228,9 @@ io.on("connection", (socket) => {
     rooms[`${lobbyId}`].totalPassCount = passCount;
     io.in(lobbyId).emit("lobby", rooms[`${lobbyId}`]);
   });
+  socket.on("hmm", (rdy) => {
+    console.log("hmm", rdy);
+  });
   socket.on("delete-from-lobby", (currentTeam, lobbyId, isReady) => {
     //socket.removeAllListeners();
     if (!rooms[`${lobbyId}`]) {
@@ -237,25 +238,33 @@ io.on("connection", (socket) => {
       return;
     }
     console.log("im deleting from loby");
-    io.in(lobbyId).emit("play-sound-lobby", "user-logout");
-    rooms[lobbyId].memberCount -= 1;
-    if (isReady) {
-      rooms[lobbyId].readyMemberCount -= 1;
-    }
-
     let deletingIndex = rooms[lobbyId][`team${currentTeam}`].findIndex(
       (player) => {
         return Object.keys(player)[0] === socket.id;
         //console.log(player);
       }
     );
+    console.log("delete ondex from lobby", deletingIndex);
+    if (deletingIndex === -1) {
+      return;
+    }
+
+    io.in(lobbyId).emit("play-sound-lobby", "user-logout");
+    rooms[lobbyId].memberCount -= 1;
+    if (isReady) {
+      console.log("adam hazir");
+      rooms[lobbyId].readyMemberCount -= 1;
+    }
+
     rooms[lobbyId][`team${currentTeam}`].splice(deletingIndex, 1);
     delete roomsSockets[lobbyId][socket.id];
     rooms[lobbyId].roomLeader = Object.keys(roomsSockets[lobbyId])[0];
     io.in(lobbyId).emit("lobby", rooms[lobbyId]);
     //console.log("lobi", rooms[lobbyId]);
   });
-
+  socket.on("called-leave", () => {
+    console.log("im called before leave");
+  });
   // DISCONNECT - TO HANDLE LATER - MAYBE
   socket.on("disconnect", () => {
     console.log("I LOST INTERNET");
@@ -295,6 +304,7 @@ io.on("connection", (socket) => {
           }
         });
         if (isInGame) {
+          console.log("it is in game");
           let deletingIndexGame = gameRooms[lobbyId][
             `team${currentTeam}`
           ].findIndex((player) => {
@@ -307,11 +317,15 @@ io.on("connection", (socket) => {
           gameRooms[lobbyId].readyMemberCount--;
           rooms[lobbyId].readyMemberCount--;
           io.in(lobbyId).emit("room-update", gameRooms[lobbyId]);
+          io.in(lobbyId).emit("lobby", rooms[lobbyId]);
 
           if (
             currentTeam === rooms[lobbyId].teamTurn &&
             rooms[lobbyId][`overAllTurn${currentTeam}`] === deletingIndexGame
           ) {
+            gameRooms[lobbyId][`overAllTurn${currentTeam}`] =
+              gameRooms[lobbyId][`overAllTurn${currentTeam}`] %
+              gameRooms[lobbyId][`team${currentTeam}`].length;
             io.in(lobbyId).emit("turn-ended");
           }
           //handle if not enough players

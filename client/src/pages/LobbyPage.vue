@@ -1,140 +1,143 @@
 <template>
-  <div v-if="!isLoading">
-    <div
-      class="container"
-      style="background-color:#FFFFFF; border-style: solid;
+  <keep-alive>
+    <div v-if="!isLoading">
+      <div
+        class="container"
+        style="background-color:#FFFFFF; border-style: solid;
   border-color: coral; border-width: 20px"
-    >
-      <div class="row">
-        <div class="col-4">
-          <team-members
-            :members="lobby.team1"
-            :teamNumber="1"
-            :teamTurn="null"
-            :tellerTurn="null"
-            :roomLeader="lobby.roomLeader"
-          ></team-members>
-        </div>
-        <div class="col" style="margin: 0 50px">
-          <div
-            v-if="lobby.isGameOn"
-            style="margin-bottom: 20px; font-family: 'Secular One', sans-serif; color: #5db427"
-          >
-            Oyun aktif!
+      >
+        <div class="row">
+          <div class="col-4">
+            <team-members
+              :members="lobby.team1"
+              :teamNumber="1"
+              :teamTurn="null"
+              :tellerTurn="null"
+              :roomLeader="lobby.roomLeader"
+            ></team-members>
           </div>
-          <div
-            style="margin-bottom: 20px; font-family: 'Secular One', sans-serif;"
-          >
-            Hazır Kullanıcılar: {{ readyMembers }}/{{ totalMembers }}
-          </div>
-          <form @submit.prevent="">
-            <div class="form-group">
-              <label
-                for="exampleInputEmail1"
-                style="font-family: 'Secular One', sans-serif;"
-                >Kullanıcı Adı</label
-              >
-              <input
-                type="text"
-                class="form-control"
-                v-model="userName"
-                id="userNameInput"
-                aria-describedby="userNameHelp"
-                placeholder="Kullanıcı adı giriniz"
-                style="font-family: 'Secular One', sans-serif;"
-                :disabled="isReady"
-              />
-              <small
-                id="emailHelp"
-                class="form-text text-muted"
-                style="font-family: 'Secular One', sans-serif;"
-                >{{ userNameWarning }}</small
-              >
-            </div>
-            <button
-              @click="readyToggle"
-              class="btn btn-primary"
-              :class="{ active: !isReady, disabled: isReady }"
-              :disabled="readyIsPressed"
-              style="font-family: 'Secular One', sans-serif;"
+          <div class="col" style="margin: 0 50px">
+            <div
+              v-if="lobby.isGameOn"
+              style="margin-bottom: 20px; font-family: 'Secular One', sans-serif; color: #5db427"
             >
-              Hazır
-            </button>
-          </form>
-          <div>
-            <button
-              @click="changeTeam"
-              class="btn btn-primary active"
-              style="font-family: 'Secular One', sans-serif;"
-              :disabled="afterTeamChangePress"
+              Oyun aktif!
+            </div>
+            <div
+              style="margin-bottom: 20px; font-family: 'Secular One', sans-serif;"
             >
-              Takım değiş
-            </button>
-          </div>
-          <div
-            style="font-family: 'Secular One', sans-serif;"
-            v-if="notEnoughPlayers"
-          >
-            {{ minUserWarning }}
-          </div>
-          <div class="row">
-            <div class="col">
-              <div
-                class="form-group"
-                style="font-family: 'Secular One', sans-serif;"
-              >
-                <label>Süre(saniye):</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  style="text-align: center"
-                  v-model="lobby.totalTimer"
-                  v-on:change="changeTimerPassCount"
-                  :disabled="socket.id !== lobby.roomLeader"
-                />
-              </div>
+              Hazır Kullanıcılar: {{ readyMembers }}/{{ totalMembers }}
             </div>
-            <div class="col">
-              <div
-                class="form-group"
-                style="font-family: 'Secular One', sans-serif; "
-              >
-                <label>Pas Hakkı:</label>
+            <form @submit.prevent="">
+              <div class="form-group">
+                <label
+                  for="exampleInputEmail1"
+                  style="font-family: 'Secular One', sans-serif;"
+                  >Kullanıcı Adı</label
+                >
                 <input
-                  type="number"
-                  style="text-align: center"
+                  type="text"
                   class="form-control"
-                  v-model="lobby.totalPassCount"
-                  v-on:change="changeTimerPassCount"
-                  :disabled="socket.id !== lobby.roomLeader"
+                  v-model="userName"
+                  id="userNameInput"
+                  aria-describedby="userNameHelp"
+                  placeholder="Kullanıcı adı giriniz"
+                  style="font-family: 'Secular One', sans-serif;"
+                  :disabled="isReady"
                 />
+                <small
+                  id="emailHelp"
+                  class="form-text text-muted"
+                  style="font-family: 'Secular One', sans-serif;"
+                  >{{ userNameWarning }}</small
+                >
               </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col">
               <button
-                class="btn btn-info"
-                style="width: 100%; font-family: 'Secular One', sans-serif;"
-                @click="copyInvitation"
+                @click="readyToggle"
+                class="btn btn-primary"
+                :class="{ active: !isReady, disabled: isReady }"
+                :disabled="readyIsPressed"
+                style="font-family: 'Secular One', sans-serif;"
               >
-                {{ invitationMessage }}
+                Hazır
+              </button>
+            </form>
+            <div>
+              <button
+                @click="changeTeam"
+                class="btn btn-primary active"
+                style="font-family: 'Secular One', sans-serif;"
+                :disabled="afterTeamChangePress"
+              >
+                Takım değiş
               </button>
             </div>
+            <div
+              style="font-family: 'Secular One', sans-serif;"
+              v-if="notEnoughPlayers"
+            >
+              {{ minUserWarning }}
+            </div>
+            <div class="row">
+              <div class="col">
+                <div
+                  class="form-group"
+                  style="font-family: 'Secular One', sans-serif;"
+                >
+                  <label>Süre(saniye):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    class="form-control"
+                    style="text-align: center"
+                    v-model="lobby.totalTimer"
+                    v-on:change="changeTimerPassCount"
+                    :disabled="socket.id !== lobby.roomLeader"
+                  />
+                </div>
+              </div>
+              <div class="col">
+                <div
+                  class="form-group"
+                  style="font-family: 'Secular One', sans-serif; "
+                >
+                  <label>Pas Hakkı:</label>
+                  <input
+                    type="number"
+                    style="text-align: center"
+                    class="form-control"
+                    v-model="lobby.totalPassCount"
+                    v-on:change="changeTimerPassCount"
+                    :disabled="socket.id !== lobby.roomLeader"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <button
+                  class="btn btn-info"
+                  style="width: 100%; font-family: 'Secular One', sans-serif;"
+                  @click="copyInvitation"
+                >
+                  {{ invitationMessage }}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="col-4">
-          <team-members
-            :members="lobby.team2"
-            :teamNumber="2"
-            :teamTurn="null"
-            :tellerTurn="null"
-            :roomLeader="lobby.roomLeader"
-          ></team-members>
+          <div class="col-4">
+            <team-members
+              :members="lobby.team2"
+              :teamNumber="2"
+              :teamTurn="null"
+              :tellerTurn="null"
+              :roomLeader="lobby.roomLeader"
+            ></team-members>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </keep-alive>
 </template>
 
 <style scoped>
@@ -179,9 +182,14 @@ export default {
   },
   inject: ["socket", "backFromGame", "copy"],
   beforeRouteLeave(to, from, next) {
+    // if (this.backFromGame.isBack) {
+    //   window.removeEventListener("beforeunload", this.deleteFromLobby);
+    // }
+
     if (to.name === "Root") {
       let dene = confirm("lobiden ayrilmak uzeresin");
       if (dene) {
+        //window.removeEventListener("beforeunload", this.deleteFromLobby);
         this.socket.emit(
           "delete-from-lobby",
           this.currentTeam,
@@ -198,17 +206,29 @@ export default {
     }
     // next(false);
   },
-  created() {
+  beforeRouteEnter(_to, _from, next) {
+    next();
+    //this.isReady = false;
+  },
+  // beforeUnmount() {
+  //   window.removeEventListener("beforeunload", this.deleteFromLobby);
+  //   // this.socket.removeAllListeners("lobby");
+  //   // this.socket.removeAllListeners("enough-players");
+  //   // this.socket.removeAllListeners("not-enough-players");
+  //   // this.socket.removeAllListeners("start-game");
+  //   // this.socket.removeAllListeners("ready-reset");
+  //   // this.socket.removeAllListeners("connected");
+  //   // this.socket.removeAllListeners("play-sound-lobby");
+  // },
+  mounted() {
     //this.socket.removeAllListeners();
     this.roomId = this.$route.params.id;
-    // window.addEventListener("beforeunload", () => {
-    //   this.socket.emit(
-    //     "delete-from-lobby",
-    //     this.currentTeam,
-    //     this.roomId,
-    //     this.isReady
-    //   );
-    // });
+    this.isReady = false;
+    this.roomId = this.$route.params.id;
+    if (!this.backFromGame.isBack) {
+      window.addEventListener("beforeunload", this.deleteFromLobby);
+    }
+
     this.socket.on("lobby", (lobby) => {
       this.lobby = lobby;
       this.isLoading = false;
@@ -254,26 +274,6 @@ export default {
     // this.socket.on("bad-url", () => {
     //   this.$router.push("/");
     // });
-
-    //oyundan cikip lobiye donme
-    if (this.backFromGame.isBack) {
-      //this.backFromGame.isBack = false;
-      console.log("bfg 1");
-      this.socket.emit("login-lobby", this.$route.params.id);
-    }
-    // this.socket.on("name-taken", () => {
-    //   this.userNameWarning = "Kullanıcı adı başkası tarafından alınmış";
-    // });
-    //linkten mi gelmis oda kuranin kendisi mi kontrolu
-    else if (this.$route.params.id === this.socket.id) {
-      console.log("creator 2 ");
-      //return;
-    } else {
-      this.socket.on("connected", () => {
-        console.log("login 3");
-        this.socket.emit("login-lobby", this.$route.params.id);
-      });
-    }
     this.socket.on("play-sound-lobby", (action) => {
       let soundToPlay;
       switch (action) {
@@ -293,10 +293,44 @@ export default {
           soundToPlay = new Audio(require("../assets/user-logout.mp3"));
           break;
       }
+      console.log("lobi sesi");
       soundToPlay.play();
     });
+
+    //oyundan cikip lobiye donme
+    if (this.backFromGame.isBack) {
+      //this.backFromGame.isBack = false;
+      console.log("bfg 1");
+      this.isReady = false;
+      this.socket.emit("login-lobby", this.$route.params.id);
+    }
+    // this.socket.on("name-taken", () => {
+    //   this.userNameWarning = "Kullanıcı adı başkası tarafından alınmış";
+    // });
+    //linkten mi gelmis oda kuranin kendisi mi kontrolu
+    else if (this.$route.params.id === this.socket.id) {
+      console.log("creator 2 ");
+      //return;
+    } else {
+      this.socket.on("connected", () => {
+        console.log("login 3");
+        this.socket.emit("login-lobby", this.$route.params.id);
+      });
+    }
   },
   methods: {
+    deleteFromLobby() {
+      if (this.$route.name === "Lobby") {
+        this.isReady = false;
+      }
+      this.socket.emit("hmm", this.isReady);
+      this.socket.emit(
+        "delete-from-lobby",
+        this.currentTeam,
+        this.roomId,
+        this.isReady
+      );
+    },
     deneme() {
       this.socket.emit("print-rooms");
       this.socket.close();
@@ -306,6 +340,10 @@ export default {
     // },
     readyToggle() {
       //this.userName = this.$refs.username.value;
+      if (this.lobby.totalTimer <= 0) {
+        this.userNameWarning = "Süre pozitif bir sayı olmalıdır";
+        return;
+      }
       if (this.userName.trim() === "") {
         this.userNameWarning = "Lütfen kullanıcı adı giriniz";
         return;
